@@ -91,12 +91,12 @@ class NewPasswordForm(Form):
 class bsdUserGroupMixin:
     def _populate_shell_choices(self):
         with open('/etc/shells') as fd:
-            shells = map(str.rstrip,
-                         filter(lambda x: x.startswith('/'), fd.readlines()))
+            shells = list(map(str.rstrip,
+                         [x for x in fd.readlines() if x.startswith('/')]))
         shell_dict = {}
         for shell in shells + ['/sbin/nologin']:
             shell_dict[shell] = os.path.basename(shell)
-        return shell_dict.items()
+        return list(shell_dict.items())
 
     def pw_checkname(self, bsdusr_username):
         if bsdusr_username.startswith('-'):
@@ -190,7 +190,7 @@ class bsdUsersForm(ModelForm, bsdUserGroupMixin):
         required=False)
     bsdusr_shell = forms.ChoiceField(
         label=_("Shell"),
-        initial=u'/bin/csh',
+        initial='/bin/csh',
         choices=())
     bsdusr_creategroup = forms.BooleanField(
         label=_("Create a new primary group for the user"),
@@ -393,10 +393,10 @@ class bsdUsersForm(ModelForm, bsdUserGroupMixin):
                     _("Home directory cannot contain colons")
                 )
 
-            if home == u'/nonexistent':
+            if home == '/nonexistent':
                 return home
 
-            if home.startswith(u'/mnt/'):
+            if home.startswith('/mnt/'):
                 bsdusr_username = self.cleaned_data.get('bsdusr_username', '')
                 saved_home = self.bsdusr_home_saved
 
@@ -463,7 +463,7 @@ class bsdUsersForm(ModelForm, bsdUserGroupMixin):
         if (
             bsdusr_home and cleaned_data.get('bsdusr_sshpubkey') and
             (
-                not bsdusr_home.startswith(u'/mnt/') and (
+                not bsdusr_home.startswith('/mnt/') and (
                     self.instance.id is None or
                     (self.instance.id and self.instance.bsdusr_uid != 0)
                 )

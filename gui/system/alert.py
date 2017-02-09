@@ -1,4 +1,4 @@
-import cPickle
+import pickle
 import datetime
 import hashlib
 import imp
@@ -42,9 +42,7 @@ class BaseAlertMetaclass(type):
         return klass
 
 
-class BaseAlert(object):
-
-    __metaclass__ = BaseAlertMetaclass
+class BaseAlert(object, metaclass=BaseAlertMetaclass):
 
     alert = None
     interval = 0
@@ -135,9 +133,7 @@ class Alert(object):
         return datetime.datetime.fromtimestamp(self._timestamp)
 
 
-class AlertPlugins:
-
-    __metaclass__ = HookMetaclass
+class AlertPlugins(metaclass=HookMetaclass):
 
     ALERT_FILE = '/var/tmp/alert'
 
@@ -176,7 +172,7 @@ class AlertPlugins:
         msgs = []
         for alert in alerts:
             if alert.getId() not in dismisseds:
-                msgs.append(unicode(alert).encode('utf8'))
+                msgs.append(str(alert).encode('utf8'))
         if len(msgs) == 0:
             return
 
@@ -196,7 +192,7 @@ class AlertPlugins:
         msgs = []
         for alert in alerts:
             if alert.getId() not in dismisseds:
-                msgs.append(unicode(alert).encode('utf8'))
+                msgs.append(str(alert).encode('utf8'))
         if len(msgs) == 0:
             return
 
@@ -250,7 +246,7 @@ class AlertPlugins:
         if os.path.exists(self.ALERT_FILE):
             with open(self.ALERT_FILE, 'r') as f:
                 try:
-                    obj = cPickle.load(f)
+                    obj = pickle.load(f)
                 except:
                     pass
 
@@ -276,7 +272,7 @@ class AlertPlugins:
                         continue
                 rv = instance.run()
                 if rv:
-                    alerts = filter(None, rv)
+                    alerts = [_f for _f in rv if _f]
                     for alert in alerts:
                         ids.append(alert.getId())
                         update_or_create = False
@@ -310,7 +306,7 @@ class AlertPlugins:
                     'alerts': rv,
                 }
 
-            except Exception, e:
+            except Exception as e:
                 log.debug("Alert module '%s' failed: %s", instance, e, exc_info=True)
                 log.error("Alert module '%s' failed: %s", instance, e)
 
@@ -343,7 +339,7 @@ class AlertPlugins:
                 self.ticket(hardware)
 
         with open(self.ALERT_FILE, 'w') as f:
-            cPickle.dump({
+            pickle.dump({
                 'last': time.time(),
                 'alerts': rvs,
                 'results': results,
@@ -354,7 +350,7 @@ class AlertPlugins:
         if not os.path.exists(self.ALERT_FILE):
             return []
         with open(self.ALERT_FILE, 'r') as f:
-            return cPickle.load(f)['alerts']
+            return pickle.load(f)['alerts']
 
 
 alertPlugins = AlertPlugins()
