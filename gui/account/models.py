@@ -75,9 +75,9 @@ class bsdGroups(Model):
                 "Group %s is built-in and can not be deleted!"
             ) % (self.bsdgrp_group))
         if pwdelete:
-            notifier().user_deletegroup(self.bsdgrp_group.encode('utf-8'))
+            notifier().user_deletegroup(self.bsdgrp_group)
         if domaincontroller_enabled():
-            Samba4().group_delete(self.bsdgrp_group.encode('utf-8'))
+            Samba4().group_delete(self.bsdgrp_group)
         super(bsdGroups, self).delete(using)
         if reload:
             notifier().reload("user")
@@ -178,7 +178,7 @@ class bsdUsers(Model):
 
     @property
     def bsdusr_sshpubkey(self):
-        keysfile = '%s/.ssh/authorized_keys' % self.bsdusr_home.encode('utf8')
+        keysfile = '%s/.ssh/authorized_keys' % self.bsdusr_home
         if not os.path.exists(keysfile):
             return ''
         try:
@@ -228,7 +228,7 @@ class bsdUsers(Model):
             time.sleep(0.1)
             return
         unixhash, smbhash = notifier().user_changepassword(
-            username=self.bsdusr_username.encode('utf-8'),
+            username=self.bsdusr_username,
             password=password,
         )
         self.bsdusr_unixhash = unixhash
@@ -253,9 +253,9 @@ class bsdUsers(Model):
             raise ValueError(_(
                 "User %s is built-in and can not be deleted!"
             ) % (self.bsdusr_username))
-        notifier().user_deleteuser(self.bsdusr_username.encode('utf-8'))
+        notifier().user_deleteuser(self.bsdusr_username)
         if domaincontroller_enabled():
-            Samba4().user_delete(self.bsdusr_username.encode('utf-8'))
+            Samba4().user_delete(self.bsdusr_username)
         try:
             gobj = self.bsdusr_group
             count = bsdGroupMembership.objects.filter(
